@@ -17,7 +17,7 @@ GLuint tex[2];
 
 GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
 
-float points[6];
+float points[250];
 
 static void make_texture (int t)
 {
@@ -67,17 +67,15 @@ int main(int argc, char **argv) {
 }
 
 void blat(float t) {
-  float x, y;
+  int i;
 
-  t *= 2.0;
-  x = 400.0*cos(t);
-  y = 400.0*sin(t);
-  points[0] = 512.0 + x;
-  points[1] = 512.0 + y;
-  points[2] = 5.0;
-  points[3] = 512.0 - x;
-  points[4] = 512.0 - y;
-  points[5] = 20.0;
+  t *= 0.1;
+
+  for (i = 0; i < 250; i++) {
+    points[3*i+0] = 512.0 + i*2.0*cos(t);
+    points[3*i+1] = 512.0 + i*2.0*sin(t);
+    points[3*i+2] = 1.0;
+  }
 }
 
 void draw(void) {
@@ -92,8 +90,8 @@ void draw(void) {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, tex[0]);
 	glUseProgramObjectARB(prog_phosphor);
-	set_uniform1i(prog_phosphor, "n", 2);
-	set_uniform1fv(prog_phosphor, "points", 6*1, points);
+	set_uniform1i(prog_phosphor, "n", 250);
+	set_uniform1fv(prog_phosphor, "points", 3*250, points);
 	glBegin(GL_QUADS);
 	glTexCoord2f(0, 0);
 	glVertex2f(-1, -1);

@@ -15,7 +15,14 @@ float dist (float x, float y)
 
 void main(void)
 {
-  float i = 0.9 * texture2D(phosphor, gl_FragCoord.xy / 1024.0).r;
-  i += points[2] * dist(points[0], points[1]);
-  gl_FragColor = vec4(i,0.0,0.0,1.0);
+  int i;
+  float r = 0.95 * texture2D(phosphor, gl_FragCoord.xy / 1024.0).r;
+  float g = 0.7 * texture2D(phosphor, gl_FragCoord.xy / 1024.0).g;
+  float d;
+  for (i = 0; i < n; i++) {
+    d = dist(points[3*i+0], points[3*i+1]);
+    r += points[3*i+2] * d;
+    g += points[3*i+2] * d;
+  }
+  gl_FragColor = vec4(r,g,0.0,1.0);
 }

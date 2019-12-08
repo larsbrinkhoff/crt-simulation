@@ -70,11 +70,12 @@ void blat(float t) {
   int i;
 
   t *= 0.1;
+  t += 3.0;
 
   for (i = 0; i < 250; i++) {
     points[3*i+0] = 512.0 + i*2.0*cos(t);
     points[3*i+1] = 512.0 + i*2.0*sin(t);
-    points[3*i+2] = 1.0;
+    points[3*i+2] = 0.5;
   }
 }
 

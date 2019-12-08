@@ -16,21 +16,15 @@ float dist (float x, float y)
 void main(void)
 {
   int i;
-  float r = 0.71 * texture2D(phosphor, gl_FragCoord.xy / 1024.0).r;
-  float g = 0.5 * texture2D(phosphor, gl_FragCoord.xy / 1024.0).g;
-  r += 0.07 * texture2D(phosphor, (gl_FragCoord.xy - vec2(1,0)) / 1024.0).r;
-  r += 0.07 * texture2D(phosphor, (gl_FragCoord.xy + vec2(1,0)) / 1024.0).r;
-  r += 0.07 * texture2D(phosphor, (gl_FragCoord.xy - vec2(0,1)) / 1024.0).r;
-  r += 0.07 * texture2D(phosphor, (gl_FragCoord.xy + vec2(0,1)) / 1024.0).r;
-  g += 0.05 * texture2D(phosphor, (gl_FragCoord.xy - vec2(1,0)) / 1024.0).g;
-  g += 0.05 * texture2D(phosphor, (gl_FragCoord.xy + vec2(1,0)) / 1024.0).g;
-  g += 0.05 * texture2D(phosphor, (gl_FragCoord.xy - vec2(0,1)) / 1024.0).g;
-  g += 0.05 * texture2D(phosphor, (gl_FragCoord.xy + vec2(0,1)) / 1024.0).g;
+  float r = 0.98 * texture2D(phosphor, gl_FragCoord.xy / 1024.0).r;
+  float g = 0.79 * texture2D(phosphor, gl_FragCoord.xy / 1024.0).g;
   float d;
   for (i = 0; i < n; i++) {
     d = dist(points[3*i+0], points[3*i+1]);
     r += points[3*i+2] * d;
     g += points[3*i+2] * d;
   }
+  r = min(r, 2.0);
+  g = min(g, 2.0);
   gl_FragColor = vec4(r,g,0.0,1.0);
 }

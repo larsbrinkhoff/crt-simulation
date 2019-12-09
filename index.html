@@ -1,0 +1,40 @@
+<html>
+	<head>
+		<meta charset="UTF-8">
+	</head>
+	<body>
+		<!--	Fairly minimalist but complete demonstration of WebGL 2 Hello World
+				Perry Kivolowitz - Carthage College Computer Science Department
+		-->
+		<script src="./gl-matrix-min.js"></script>
+		<div style="position: relative;">
+			<canvas id="txcanvas" width="1024" height="768" style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
+			<canvas id="glcanvas" width="1024" height="768" style="position: absolute; left: 0; top: 0; z-index: 0;"></canvas>
+		</div>
+		<!-- The GLSL version string must be the first characters in a shader. This accounts for the odd looking first line -->
+		<script id="phosphor" type="x-shader/x-vertex" src="./phosphor.glsl"></script>
+		<script id="vertex_shader" type="x-shader/x-vertex">#version 300 es
+			uniform mat4 u_mv;
+			uniform mat4 u_pj;
+			in vec3 a_vertex_coordinates;
+			in vec3 a_colors;
+			out vec4 colors;
+
+			void main(void)
+			{ 
+				gl_Position = u_pj * u_mv * vec4(a_vertex_coordinates, 1.0);
+				colors = vec4(a_colors, 1.0);
+			}
+		</script>
+		<script id="fragment_shader" type="x-shader/x-fragment">#version 300 es
+			precision mediump float;
+			in vec4 colors;
+			out vec4 frag_color;
+			void main(void)
+			{
+				frag_color = colors;
+			}
+		</script>
+		<script src="./gl-matrix-min.js"></script>
+	</body>
+</html>

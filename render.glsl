@@ -7,7 +7,7 @@ uniform sampler2D phosphor;
 
 void main(void)
 {
-    vec2 xy = vec2(gl_FragCoord.x/1024.0, gl_FragCoord.y/1024.0);
+    vec2 xy = gl_FragCoord.xy/1024.0;
     float i1 = texture2D(phosphor, xy).r;
     float i2 = texture2D(phosphor, xy).g;
     vec3 c1 = i1 * vec3(0.3,0.4,0.0);

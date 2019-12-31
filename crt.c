@@ -10,6 +10,7 @@ void draw(void);
 void idle_handler(void);
 void key_handler(unsigned char key, int x, int y);
 
+unsigned int prog_point;
 unsigned int prog_phosphor;
 unsigned int prog_render;
 GLuint fbo;
@@ -57,6 +58,9 @@ int main(int argc, char **argv) {
 	if(!(prog_phosphor = setup_shader("phosphor.glsl"))) {
 		return EXIT_FAILURE;
 	}
+	if(!(prog_point = setup_shader("point.glsl"))) {
+		return EXIT_FAILURE;
+	}
 	if(!(prog_render = setup_shader("render.glsl"))) {
 		return EXIT_FAILURE;
 	}
@@ -72,7 +76,7 @@ void blat(float t) {
   t *= 0.1;
   t += 3.0;
 
-  for (i = 0; i < 250; i++) {
+  for (i = 0; i < 250; i += 2) {
     points[3*i+0] = 512.0 + i*2.0*cos(t);
     points[3*i+1] = 512.0 + i*2.0*sin(t);
     points[3*i+2] = 0.5;
@@ -93,6 +97,8 @@ void draw(void) {
 	glUseProgramObjectARB(prog_phosphor);
 	set_uniform1i(prog_phosphor, "n", 250);
 	set_uniform1fv(prog_phosphor, "points", 3*250, points);
+
+	/* Entire display. */
 	glBegin(GL_QUADS);
 	glTexCoord2f(0, 0);
 	glVertex2f(-1, -1);
@@ -102,6 +108,23 @@ void draw(void) {
 	glVertex2f(1, 1);
 	glTexCoord2f(0, 1);
 	glVertex2f(-1, 1);
+	glEnd();
+
+	/* Individual points. */
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, tex[1]);
+	glUseProgramObjectARB(prog_point);
+	set_uniform2f(prog_point, "xy", 400.0, 300.0);
+	glBegin(GL_QUADS);
+	glColor3f(1,0,0);
+	glTexCoord2f(0, 0);
+	glVertex2f(-.1, -.1);
+	glTexCoord2f(1, 0);
+	glVertex2f(.1, -.1);
+	glTexCoord2f(1, 1);
+	glVertex2f(.1, .1);
+	glTexCoord2f(0, 1);
+	glVertex2f(-.1, .1);
 	glEnd();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);

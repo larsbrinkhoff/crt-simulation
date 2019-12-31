@@ -78,6 +78,13 @@ void set_uniform1f(unsigned int prog, const char *name, float val) {
 	}
 }
 
+void set_uniform2f(unsigned int prog, const char *name, float val1, float val2) {
+	int loc = glGetUniformLocationARB(prog, name);
+	if(loc != -1) {
+	  glUniform2f(loc, val1, val2);
+	}
+}
+
 void set_uniform1i(unsigned int prog, const char *name, int val) {
 	int loc = glGetUniformLocationARB(prog, name);
 	if(loc != -1) {

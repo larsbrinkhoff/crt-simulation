@@ -12,5 +12,6 @@ void main(void)
     float i2 = texture2D(phosphor, xy).g;
     vec3 c1 = 0.5* i1 * vec3(0.3,0.4,0.0);
     vec3 c2 = i2 * vec3(0.3,0.4,1.0);
-    gl_FragColor = vec4(c1+c2,1.0);
+    vec3 c3 = vec3(0.15, 0.2, 0.15);
+    gl_FragColor = vec4(c1+c2+c3,1.0);
 }

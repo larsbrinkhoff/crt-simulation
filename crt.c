@@ -10,6 +10,8 @@ void draw(void);
 void idle_handler(void);
 void key_handler(unsigned char key, int x, int y);
 
+float focus = 1.0;
+float intensity = .5;
 unsigned int prog_point;
 unsigned int prog_phosphor;
 unsigned int prog_render;
@@ -69,6 +71,8 @@ int main(int argc, char **argv) {
 void spot(float x, float y)
 {
   set_uniform2f(prog_point, "xy", x, y);
+  set_uniform1f(prog_point, "focus", focus);
+  set_uniform1f(prog_point, "intensity", intensity);
 
   x -= 400;
   y -= 300;
@@ -184,6 +188,19 @@ void key_handler(unsigned char key, int x, int y) {
 	case 'q':
 	case 'Q':
 		exit(0);
+		break;
+	case 'F':
+	  focus *= 1.1;
+	  break;
+	case 'f':
+	  focus /= 1.1;
+	  break;
+	case 'I':
+	  intensity *= 1.1;
+	  break;
+	case 'i':
+	  intensity /= 1.1;
+	  break;
 	}
 	glutPostRedisplay();
 }

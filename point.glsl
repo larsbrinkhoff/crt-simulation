@@ -1,5 +1,7 @@
 #version 130
 
+precision mediump float;
+
 uniform vec2 xy;
 uniform float focus;
 uniform float intensity;

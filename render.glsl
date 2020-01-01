@@ -1,5 +1,7 @@
 #version 130
 
+precision mediump float;
+
 const vec2 resolution = vec2(800.0, 600.0);
 
 uniform float time;

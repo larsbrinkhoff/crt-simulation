@@ -18,8 +18,6 @@ GLuint tex[2];
 
 GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
 
-float points[250];
-
 static void make_texture (int t)
 {
 	glBindTexture(GL_TEXTURE_2D, t);
@@ -31,8 +29,6 @@ static void make_texture (int t)
 }
 
 int main(int argc, char **argv) {
-	memset (points, 0, sizeof points);
-
 	/* initialize glut */
 	glutInitWindowSize(800, 600);
 	
@@ -70,24 +66,59 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-void blat(float t) {
+void spot(float x, float y)
+{
+  set_uniform2f(prog_point, "xy", x, y);
+
+  x -= 400;
+  y -= 300;
+  x /= 400;
+  y /= 300;
+
+  glBegin(GL_QUADS);
+  glTexCoord2f(0, 0);
+  glVertex2f(x-.01, y-.01);
+  glTexCoord2f(1, 0);
+  glVertex2f(x+.01, y-.01);
+  glTexCoord2f(1, 1);
+  glVertex2f(x+.01, y+.01);
+  glTexCoord2f(0, 1);
+  glVertex2f(x-.01, y+.01);
+  glEnd();
+}
+
+void blat1(float t) {
   int i;
 
   t *= 0.1;
   t += 3.0;
 
-  for (i = 0; i < 250; i += 2) {
-    points[3*i+0] = 512.0 + i*2.0*cos(t);
-    points[3*i+1] = 512.0 + i*2.0*sin(t);
-    points[3*i+2] = 0.5;
+  for (i = 0; i < 150; i += 2) {
+    spot (400 + i*2.0*cos(t),
+	  300 + i*2.0*sin(t));
+  }
+}
+
+void blat2(float t) {
+  int x, i;
+
+  t *= 120;
+
+  x = ((int)(t+.5)) % 1600;
+  if (x >= 800)
+    x = 1600-x;
+
+  for (i = 0; i < 800; i++) {
+    spot (x+i, (3*i)/4);
+    spot (x-i, (3*i)/4);
+    spot (799-x-i, 599-(3*i)/4);
+    spot (799-x+i, 599-(3*i)/4);
   }
 }
 
 void draw(void) {
 	int tt;
-
 	float t = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
-	blat(t);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
@@ -95,8 +126,6 @@ void draw(void) {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, tex[0]);
 	glUseProgramObjectARB(prog_phosphor);
-	set_uniform1i(prog_phosphor, "n", 250);
-	set_uniform1fv(prog_phosphor, "points", 3*250, points);
 
 	/* Entire display. */
 	glBegin(GL_QUADS);
@@ -114,24 +143,16 @@ void draw(void) {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, tex[1]);
 	glUseProgramObjectARB(prog_point);
-	set_uniform2f(prog_point, "xy", 400.0, 300.0);
-	glBegin(GL_QUADS);
-	glColor3f(1,0,0);
-	glTexCoord2f(0, 0);
-	glVertex2f(-.1, -.1);
-	glTexCoord2f(1, 0);
-	glVertex2f(.1, -.1);
-	glTexCoord2f(1, 1);
-	glVertex2f(.1, .1);
-	glTexCoord2f(0, 1);
-	glVertex2f(-.1, .1);
-	glEnd();
+
+	if ((int)(.1*t) % 2 == 0)
+	  blat1(t);
+	else
+	  blat2(t);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glUseProgramObjectARB(prog_render);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, tex[1]);
-	/* set_uniform1i(prog_phosphor, "phosphor", 0); */
 	set_uniform1f(prog_render, "time", glutGet(GLUT_ELAPSED_TIME)/10000.0);
 
 	glBegin(GL_QUADS);

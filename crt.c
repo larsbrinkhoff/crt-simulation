@@ -10,8 +10,9 @@ void draw(void);
 void idle_handler(void);
 void key_handler(unsigned char key, int x, int y);
 
-float focus = 1.0;
-float intensity = .5;
+int demo = 0;
+float focus = 1.1;
+float intensity = 1.0;
 unsigned int prog_point;
 unsigned int prog_phosphor;
 unsigned int prog_render;
@@ -91,24 +92,24 @@ void spot(float x, float y)
   glEnd();
 }
 
-void blat1(float t) {
+void blat1(float t, int tt) {
   int i;
 
-  t *= 0.1;
+  t = 0.01* tt;
+
+  t *= 0.7;
   t += 3.0;
 
-  for (i = 0; i < 150; i += 2) {
-    spot (400 + i*2.0*cos(t),
-	  300 + i*2.0*sin(t));
+  for (i = -300; i < 300; i += 2) {
+    spot (400 + i*cos(t),
+	  300 + i*sin(t));
   }
 }
 
-void blat2(float t) {
+void blat2(float t, int tt) {
   int x, i;
 
-  t *= 120;
-
-  x = ((int)(t+.5)) % 1600;
+  x = (5*tt) % 1600;
   if (x >= 800)
     x = 1600-x;
 
@@ -120,9 +121,14 @@ void blat2(float t) {
   }
 }
 
+void (*blat[])(float, int) = { blat1, blat2 };
+
+int t2 = 0;
+
 void draw(void) {
 	int tt;
 	float t = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
+	t2++;
 
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
@@ -148,10 +154,7 @@ void draw(void) {
 	glBindTexture(GL_TEXTURE_2D, tex[1]);
 	glUseProgramObjectARB(prog_point);
 
-	if ((int)(.1*t) % 2 == 0)
-	  blat1(t);
-	else
-	  blat2(t);
+	blat[demo](t, t2);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glUseProgramObjectARB(prog_render);
@@ -200,6 +203,9 @@ void key_handler(unsigned char key, int x, int y) {
 	  break;
 	case 'i':
 	  intensity /= 1.1;
+	  break;
+	case ' ':
+	  demo = (demo + 1) % 2;
 	  break;
 	}
 	glutPostRedisplay();

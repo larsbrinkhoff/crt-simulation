@@ -7,6 +7,7 @@
 #include "util.h"
 
 void draw(void);
+void reshape(GLint, GLint);
 void idle_handler(void);
 void key_handler(unsigned char key, int x, int y);
 
@@ -40,6 +41,7 @@ int main(int argc, char **argv) {
 	glutCreateWindow("CRT");
 
 	glutDisplayFunc(draw);
+	glutReshapeFunc(reshape);
 	glutIdleFunc(idle_handler);
 	glutKeyboardFunc(key_handler);
 
@@ -209,4 +211,10 @@ void key_handler(unsigned char key, int x, int y) {
 	  break;
 	}
 	glutPostRedisplay();
+}
+
+void reshape(GLint w, GLint h)
+{
+  glClearColor(0.15, 0.2, 0.15, 0.0);
+  glClear(GL_COLOR_BUFFER_BIT);
 }

@@ -123,7 +123,40 @@ void blat2(float t, int tt) {
   }
 }
 
-void (*blat[])(float, int) = { blat1, blat2 };
+void blat3(float t, int tt)
+{
+  float x, r, u, v;
+  int y;
+
+  r = 30+20*sin(.03*tt);
+
+  for (x = -10; x < 10; x++) {
+    for (y = -200; y < 200; y +=3) {
+      u = (r*x)*cos(.005*tt) + (y)*sin(.005*tt);
+      v = (y)*cos(.005*tt) + (r*x)*sin(.005*tt);
+      spot (400+u, 300+v);
+    }
+  }
+}
+
+void blat4(float t, int tt)
+{
+  static long long x, y, v = 0;
+  int i;
+
+  for (i = 0; i < 500; i++) {
+    x = 01001002LL;
+    x += v;
+    x &= 0777777777777LL;
+    v = x;
+    y = x & 0777777LL;
+    x >>= 18;
+    x ^= v;
+    spot (1.0*(x & 01777), 1.0*(y & 01777));
+  }
+}
+
+void (*blat[])(float, int) = { blat1, blat2, blat3, blat4 };
 
 int t2 = 0;
 
@@ -207,7 +240,7 @@ void key_handler(unsigned char key, int x, int y) {
 	  intensity /= 1.1;
 	  break;
 	case ' ':
-	  demo = (demo + 1) % 2;
+	  demo = (demo + 1) % 4;
 	  break;
 	}
 	glutPostRedisplay();

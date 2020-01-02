@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -std=c89 -pedantic -Wall
+CFLAGS = -pedantic -Wall
 LDFLAGS = -L/usr/lib64/nvidia -L/usr/X11R6/lib -lGL -lGLU -lglut -lm
 
 .PHONY: all

@@ -12,8 +12,8 @@ void idle_handler(void);
 void key_handler(unsigned char key, int x, int y);
 
 int demo = 0;
-float focus = 1.1;
-float intensity = 1.0;
+float focus = 1.0;
+float intensity = 2.0;
 unsigned int prog_point;
 unsigned int prog_phosphor;
 unsigned int prog_render;

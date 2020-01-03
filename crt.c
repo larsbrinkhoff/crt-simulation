@@ -103,8 +103,12 @@ void blat1(float t, int tt) {
   t += 3.0;
 
   for (i = -300; i < 300; i += 2) {
-    spot (400 + i*cos(t),
-	  300 + i*sin(t));
+    float x = 400 + i*cos(t);
+    float y = 300 + i*sin(t);
+    if ((tt % 200) < 100)
+      spot (x, y);
+    else
+      spot ((int)(x + .5), (int)(y + .5));
   }
 }
 

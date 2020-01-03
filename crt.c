@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
 
 void spot(float x, float y)
 {
-  set_uniform2f(prog_point, "xy", x, y);
+  set_uniform2f(prog_point, "xy", x + .5, y + .5);
   set_uniform1f(prog_point, "focus", focus);
   set_uniform1f(prog_point, "intensity", intensity);
 

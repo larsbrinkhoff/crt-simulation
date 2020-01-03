@@ -141,18 +141,21 @@ void blat3(float t, int tt)
 
 void blat4(float t, int tt)
 {
-  static long long x, y, v = 0;
+  static long long x, y, z, v = 0;
   int i;
 
-  for (i = 0; i < 500; i++) {
+  for (i = 0; i < 200; i++) {
     x = 01001002LL;
     x += v;
     x &= 0777777777777LL;
     v = x;
-    y = x & 0777777LL;
+    z = y & 0777777LL;
+    y >>= 18;
+    y |= (x & 0777777LL) << 18;
     x >>= 18;
+    x |= z << 18;
     x ^= v;
-    spot (1.0*(x & 01777), 1.0*(y & 01777));
+    spot (x >> 26, y >> 26);
   }
 }
 

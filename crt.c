@@ -40,6 +40,17 @@ int main(int argc, char **argv) {
 	/* initialize glut */
 	glutInitWindowSize(800, 600);
 	
+	fprintf (stderr, "Pass -S to start a network server on port 3400.\n\n");
+	fprintf (stderr, "Type space to cyle between modes:\n");
+	fprintf (stderr, " - Radar.\n");
+	fprintf (stderr, " - Rectangle thingy.\n");
+	fprintf (stderr, " - Swirling lines.\n");
+	fprintf (stderr, " - Munching squares.\n");
+	fprintf (stderr, " - Network data.\n\n");
+	fprintf (stderr, "Type q to quit.\n");
+	fprintf (stderr, "Type i/I to change intensity.\n");
+	fprintf (stderr, "Type f/F to change focus.\n");
+
 	if (argc >= 2 && strcmp (argv[1], "-S") == 0) {
 	  fprintf (stderr, "Waiting for connection.\n");
 	  fd = serve(3400);

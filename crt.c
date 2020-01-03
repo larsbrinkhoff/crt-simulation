@@ -20,6 +20,10 @@ unsigned int prog_render;
 GLuint fbo;
 GLuint tex[2];
 
+int fd;
+unsigned int buffer[1000];
+int points = 0;
+
 GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
 
 static void make_texture (int t)
@@ -36,6 +40,13 @@ int main(int argc, char **argv) {
 	/* initialize glut */
 	glutInitWindowSize(800, 600);
 	
+	if (argc >= 2 && strcmp (argv[1], "-S") == 0) {
+	  fprintf (stderr, "Waiting for connection.\n");
+	  fd = serve(3400);
+	  argc--;
+	  argv++;
+	}
+
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
 	glutCreateWindow("CRT");
@@ -138,7 +149,10 @@ void blat3(float t, int tt)
     for (y = -200; y < 200; y +=3) {
       u = (r*x)*cos(.005*tt) + (y)*sin(.005*tt);
       v = (y)*cos(.005*tt) + (r*x)*sin(.005*tt);
-      spot (400+u, 300+v);
+      if ((tt % 400) < 200)
+	spot (400+u, 300+v);
+      else
+	spot ((int)(400+u+.5), (int)(300+v+.5));
     }
   }
 }
@@ -163,7 +177,20 @@ void blat4(float t, int tt)
   }
 }
 
-void (*blat[])(float, int) = { blat1, blat2, blat3, blat4 };
+void blat5(float t, int tt)
+{
+  int i;
+
+  for (i = 0; i < points; i++) {
+    int x, y, intensity;
+    x = buffer[i] & 01777;
+    y = (buffer[i] >> 10) & 01777;
+    intensity = (buffer[i] >> 20) & 7;
+    spot (x, y);
+  }
+}
+
+void (*blat[])(float, int) = { blat1, blat2, blat3, blat4, blat5 };
 
 int t2 = 0;
 
@@ -221,6 +248,11 @@ void draw(void) {
 	tt = tex[0];
 	tex[0] = tex[1];
 	tex[1] = tt;
+
+	int n = transfer (fd, buffer, sizeof buffer);
+	if (n > 0) {
+	  points = n/4;
+	}
 }
 
 void idle_handler(void) {
@@ -247,7 +279,7 @@ void key_handler(unsigned char key, int x, int y) {
 	  intensity /= 1.1;
 	  break;
 	case ' ':
-	  demo = (demo + 1) % 4;
+	  demo = (demo + 1) % 5;
 	  break;
 	}
 	glutPostRedisplay();

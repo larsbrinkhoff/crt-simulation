@@ -3,38 +3,205 @@
 		<meta charset="UTF-8">
 	</head>
 	<body>
-		<!--	Fairly minimalist but complete demonstration of WebGL 2 Hello World
-				Perry Kivolowitz - Carthage College Computer Science Department
-		-->
-		<script src="./gl-matrix-min.js"></script>
-		<div style="position: relative;">
-			<canvas id="txcanvas" width="1024" height="768" style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
-			<canvas id="glcanvas" width="1024" height="768" style="position: absolute; left: 0; top: 0; z-index: 0;"></canvas>
-		</div>
-		<!-- The GLSL version string must be the first characters in a shader. This accounts for the odd looking first line -->
-		<script id="phosphor" type="x-shader/x-vertex" src="./phosphor.glsl"></script>
-		<script id="vertex_shader" type="x-shader/x-vertex">#version 300 es
-			uniform mat4 u_mv;
-			uniform mat4 u_pj;
-			in vec3 a_vertex_coordinates;
-			in vec3 a_colors;
-			out vec4 colors;
 
-			void main(void)
-			{ 
-				gl_Position = u_pj * u_mv * vec4(a_vertex_coordinates, 1.0);
-				colors = vec4(a_colors, 1.0);
-			}
-		</script>
-		<script id="fragment_shader" type="x-shader/x-fragment">#version 300 es
-			precision mediump float;
-			in vec4 colors;
-			out vec4 frag_color;
-			void main(void)
-			{
-				frag_color = colors;
-			}
-		</script>
-		<script src="./gl-matrix-min.js"></script>
-	</body>
+<script src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/230211/glmatrix.min.js"></script>
+<script id="shader-fs" type="x-shader/x-fragment">
+  precision mediump float;
+
+  void main(void) {
+  gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);
+  }
+</script>
+
+<canvas id="lesson01-canvas" style="border: 10px;" width="1024" height="1024"></canvas>
+
+<script>
+var gl;
+
+function getSourceSynch(url) {
+var req = new XMLHttpRequest();
+req.open("GET", url, false);
+req.send(null);
+return (req.status == 200) ? req.responseText : null;
+}
+
+function initGL(canvas) {
+try {
+gl = canvas.getContext("webgl2");
+gl.viewportWidth = canvas.width;
+gl.viewportHeight = canvas.height;
+} catch (e) {
+}
+if (!gl) {
+alert("Could not initialise WebGL, sorry :-(");
+}
+}
+
+
+function getShader(gl, id) {
+var shaderScript = document.getElementById(id);
+if (!shaderScript) {
+return null;
+}
+
+var str = "";
+var k = shaderScript.firstChild;
+while (k) {
+if (k.nodeType == 3) {
+str += k.textContent;
+}
+k = k.nextSibling;
+}
+
+var shader;
+if (shaderScript.type == "x-shader/x-fragment") {
+shader = gl.createShader(gl.FRAGMENT_SHADER);
+} else if (shaderScript.type == "x-shader/x-vertex") {
+shader = gl.createShader(gl.VERTEX_SHADER);
+} else {
+return null;
+}
+
+gl.shaderSource(shader, str);
+gl.compileShader(shader);
+
+if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+alert(gl.getShaderInfoLog(shader));
+return null;
+}
+
+return shader;
+}
+
+
+function getShaderHttp(gl, url) {
+var shaderScript = getSourceSynch(url);
+if (!shaderScript) {
+return null;
+}
+
+var str = shaderScript;
+
+var shader = gl.createShader(gl.VERTEX_SHADER);
+
+gl.shaderSource(shader, str);
+gl.compileShader(shader);
+
+if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+alert(gl.getShaderInfoLog(shader));
+return null;
+}
+
+return shader;
+}
+
+
+var shaderProgram;
+
+function initShaders() {
+var fragmentShader = getShader(gl, "shader-fs");
+var vertexShader = getShaderHttp(gl, "http://lars.nocrew.org/crt-simulation/test.glsl");
+
+shaderProgram = gl.createProgram();
+gl.attachShader(shaderProgram, vertexShader);
+gl.attachShader(shaderProgram, fragmentShader);
+gl.linkProgram(shaderProgram);
+
+if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+alert("Could not initialise shaders");
+}
+
+gl.useProgram(shaderProgram);
+
+shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
+gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+
+shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
+shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+}
+
+
+var mvMatrix = mat4.create();
+var pMatrix = mat4.create();
+
+function setMatrixUniforms() {
+gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
+gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
+}
+
+
+
+var triangleVertexPositionBuffer;
+var squareVertexPositionBuffer;
+
+function initBuffers() {
+triangleVertexPositionBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
+var vertices = [
+0.0,  1.0,  0.0,
+-1.0, -1.0,  0.0,
+1.0, -1.0,  0.0
+];
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+triangleVertexPositionBuffer.itemSize = 3;
+triangleVertexPositionBuffer.numItems = 3;
+
+squareVertexPositionBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
+vertices = [
+1.0,  1.0,  0.0,
+-1.0,  1.0,  0.0,
+1.0, -1.0,  0.0,
+-1.0, -1.0,  0.0
+];
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+squareVertexPositionBuffer.itemSize = 3;
+squareVertexPositionBuffer.numItems = 4;
+}
+
+
+function drawScene() {
+gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
+
+mat4.identity(mvMatrix);
+
+mat4.translate(mvMatrix, [-1.5, 0.0, -7.0]);
+gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
+gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, triangleVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+setMatrixUniforms();
+gl.drawArrays(gl.TRIANGLES, 0, triangleVertexPositionBuffer.numItems);
+
+
+mat4.translate(mvMatrix, [3.0, 0.0, 0.0]);
+gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
+gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+setMatrixUniforms();
+gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);
+}
+
+
+
+function webGLStart() {
+var canvas = document.getElementById("lesson01-canvas");
+if (!canvas) {
+alert("no canvas");
+}
+initGL(canvas);
+initShaders();
+initBuffers();
+
+gl.clearColor(1.0, 1.0, 1.0, 1.0);
+gl.enable(gl.DEPTH_TEST);
+
+drawScene();
+}
+
+  webGLStart()
+</script>
+
+
+        </body>
 </html>

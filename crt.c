@@ -93,11 +93,11 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-void spot(float x, float y)
+void spot(float x, float y, float i)
 {
   set_uniform2f(prog_point, "xy", x + .5, y + .5);
   set_uniform1f(prog_point, "focus", focus);
-  set_uniform1f(prog_point, "intensity", intensity);
+  set_uniform1f(prog_point, "intensity", i);
 
   x -= 400;
   y -= 300;
@@ -128,9 +128,9 @@ void blat1(float t, int tt) {
     float x = 400 + i*cos(t);
     float y = 300 + i*sin(t);
     if ((tt % 200) < 100)
-      spot (x, y);
+      spot (x, y, intensity);
     else
-      spot ((int)(x + .5), (int)(y + .5));
+      spot ((int)(x + .5), (int)(y + .5), intensity);
   }
 }
 
@@ -142,10 +142,10 @@ void blat2(float t, int tt) {
     x = 1600-x;
 
   for (i = 0; i < 800; i++) {
-    spot (x+i, (3*i)/4);
-    spot (x-i, (3*i)/4);
-    spot (799-x-i, 599-(3*i)/4);
-    spot (799-x+i, 599-(3*i)/4);
+    spot (x+i, (3*i)/4, intensity);
+    spot (x-i, (3*i)/4, intensity);
+    spot (799-x-i, 599-(3*i)/4, intensity);
+    spot (799-x+i, 599-(3*i)/4, intensity);
   }
 }
 
@@ -161,9 +161,9 @@ void blat3(float t, int tt)
       u = (r*x)*cos(.005*tt) + (y)*sin(.005*tt);
       v = (y)*cos(.005*tt) + (r*x)*sin(.005*tt);
       if ((tt % 400) < 200)
-	spot (400+u, 300+v);
+	spot (400+u, 300+v, intensity);
       else
-	spot ((int)(400+u+.5), (int)(300+v+.5));
+	spot ((int)(400+u+.5), (int)(300+v+.5), intensity);
     }
   }
 }
@@ -184,7 +184,7 @@ void blat4(float t, int tt)
     x >>= 18;
     x |= z << 18;
     x ^= v;
-    spot (x >> 26, y >> 26);
+    spot (x >> 26, y >> 26, intensity);
   }
 }
 
@@ -193,11 +193,10 @@ void blat5(float t, int tt)
   int i;
 
   for (i = 0; i < points; i++) {
-    int x, y, intensity;
+    int x, y;
     x = buffer[i] & 01777;
     y = (buffer[i] >> 10) & 01777;
-    intensity = (buffer[i] >> 20) & 7;
-    spot (x, y);
+    spot (x, y, 0.1 * ((buffer[i] >> 20) & 7));
   }
 }
 

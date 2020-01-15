@@ -38,7 +38,7 @@ static void make_texture (int t)
 
 int main(int argc, char **argv) {
 	/* initialize glut */
-	glutInitWindowSize(800, 600);
+	glutInitWindowSize(1024, 1024);
 	
 	fprintf (stderr, "Pass -S to start a network server on port 3400.\n\n");
 	fprintf (stderr, "Type space to cyle between modes:\n");
@@ -99,20 +99,20 @@ void spot(float x, float y, float i)
   set_uniform1f(prog_point, "focus", focus);
   set_uniform1f(prog_point, "intensity", i);
 
-  x -= 400;
-  y -= 300;
-  x /= 400;
-  y /= 300;
+  x -= 512;
+  y -= 512;
+  x /= 512;
+  y /= 512;
 
   glBegin(GL_QUADS);
   glTexCoord2f(0, 0);
-  glVertex2f(x-.01, y-.01);
+  glVertex2f(x-.1, y-.1);
   glTexCoord2f(1, 0);
-  glVertex2f(x+.01, y-.01);
+  glVertex2f(x+.1, y-.1);
   glTexCoord2f(1, 1);
-  glVertex2f(x+.01, y+.01);
+  glVertex2f(x+.1, y+.1);
   glTexCoord2f(0, 1);
-  glVertex2f(x-.01, y+.01);
+  glVertex2f(x-.1, y+.1);
   glEnd();
 }
 
@@ -124,9 +124,9 @@ void blat1(float t, int tt) {
   t *= 0.7;
   t += 3.0;
 
-  for (i = -300; i < 300; i += 2) {
-    float x = 400 + i*cos(t);
-    float y = 300 + i*sin(t);
+  for (i = -500; i < 500; i += 2) {
+    float x = 512 + i*cos(t);
+    float y = 512 + i*sin(t);
     if ((tt % 200) < 100)
       spot (x, y, intensity);
     else
@@ -137,15 +137,15 @@ void blat1(float t, int tt) {
 void blat2(float t, int tt) {
   int x, i;
 
-  x = (5*tt) % 1600;
-  if (x >= 800)
-    x = 1600-x;
+  x = (5*tt) % 2048;
+  if (x >= 1024)
+    x = 2048-x;
 
-  for (i = 0; i < 800; i++) {
-    spot (x+i, (3*i)/4, intensity);
-    spot (x-i, (3*i)/4, intensity);
-    spot (799-x-i, 599-(3*i)/4, intensity);
-    spot (799-x+i, 599-(3*i)/4, intensity);
+  for (i = 0; i < 1024; i++) {
+    spot (x+i, i, intensity);
+    spot (x-i, i, intensity);
+    spot (1023-x-i, 1024-i, intensity);
+    spot (1023-x+i, 1024-i, intensity);
   }
 }
 
@@ -161,9 +161,9 @@ void blat3(float t, int tt)
       u = (r*x)*cos(.005*tt) + (y)*sin(.005*tt);
       v = (y)*cos(.005*tt) + (r*x)*sin(.005*tt);
       if ((tt % 400) < 200)
-	spot (400+u, 300+v, intensity);
+	spot (512+u, 512+v, intensity);
       else
-	spot ((int)(400+u+.5), (int)(300+v+.5), intensity);
+	spot ((int)(512+u+.5), (int)(512+v+.5), intensity);
     }
   }
 }
@@ -196,7 +196,7 @@ void blat5(float t, int tt)
     int x, y;
     x = buffer[i] & 01777;
     y = (buffer[i] >> 10) & 01777;
-    spot (x, y, 0.1 * ((buffer[i] >> 20) & 7));
+    spot (x, y, intensity * 0.1 * ((buffer[i] >> 20) & 7));
   }
 }
 
@@ -208,6 +208,9 @@ void draw(void) {
 	int tt;
 	float t = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
 	t2++;
+
+	glViewport(0, 0, 1024, 1024);
+	gluOrtho2D(-1,1,-1,1);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,

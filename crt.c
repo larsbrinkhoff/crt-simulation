@@ -15,6 +15,7 @@ int demo = 0;
 float focus = 1.0;
 float intensity = 2.0;
 unsigned int prog_point;
+unsigned int prog_line;
 unsigned int prog_phosphor;
 unsigned int prog_render;
 GLuint fbo;
@@ -52,8 +53,9 @@ int main(int argc, char **argv) {
 	fprintf (stderr, "Type f/F to change focus.\n");
 
 	if (argc >= 2 && strcmp (argv[1], "-S") == 0) {
-	  fprintf (stderr, "Waiting for connection.\n");
+	  fprintf (stderr, "Waiting for connection...");
 	  fd = serve(3400);
+	  fprintf (stderr, " OK\n");
 	  argc--;
 	  argv++;
 	}
@@ -84,6 +86,9 @@ int main(int argc, char **argv) {
 	if(!(prog_point = setup_shader("point.glsl"))) {
 		return EXIT_FAILURE;
 	}
+	if(!(prog_line = setup_shader("line.glsl"))) {
+		return EXIT_FAILURE;
+	}
 	if(!(prog_render = setup_shader("render.glsl"))) {
 		return EXIT_FAILURE;
 	}
@@ -104,6 +109,7 @@ void spot(float x, float y, float i)
   x /= 512;
   y /= 512;
 
+  glUseProgramObjectARB(prog_point);
   glBegin(GL_QUADS);
   glTexCoord2f(0, 0);
   glVertex2f(x-.1, y-.1);
@@ -113,6 +119,57 @@ void spot(float x, float y, float i)
   glVertex2f(x+.1, y+.1);
   glTexCoord2f(0, 1);
   glVertex2f(x-.1, y+.1);
+  glEnd();
+}
+
+void line(float x1, float y1, float x2, float y2, float i)
+{
+  float u1, u2, v1, v2, du, dv;
+  float tmp;
+
+  u1 = (x1 - 512) / 512;
+  v1 = (y1 - 512) / 512;
+  u2 = (x2 - 512) / 512;
+  v2 = (y2 - 512) / 512;
+
+  du = u1 - u2;
+  dv = v1 - v2;
+  tmp = 10 * sqrt (du*du + dv*dv);
+  du /= tmp;
+  dv /= tmp;
+
+  glUseProgramObjectARB(prog_point);
+  set_uniform1f(prog_point, "focus", focus);
+  set_uniform1f(prog_point, "intensity", i);
+
+  // Draw one end of the line.
+  set_uniform2f(prog_point, "xy", x1 + .5, y1 + .5);
+  glBegin(GL_TRIANGLES);
+  glVertex2f(u1+dv, v1-du);
+  glVertex2f(u1+du, v1+dv);
+  glVertex2f(u1-dv, v1+du);
+  glEnd();
+
+  // Draw the other end of the line.
+  set_uniform2f(prog_point, "xy", x2 + .5, y2 + .5);
+  glBegin(GL_TRIANGLES);
+  glVertex2f(u2-dv, v2+du);
+  glVertex2f(u2-du, v2-dv);
+  glVertex2f(u2+dv, v2-du);
+  glEnd();
+
+  glUseProgramObjectARB(prog_line);
+  set_uniform2f(prog_line, "xy1", x1 + .5, y1 + .5);
+  set_uniform2f(prog_line, "xy2", x2 + .5, y2 + .5);
+  set_uniform1f(prog_line, "focus", focus);
+  set_uniform1f(prog_line, "intensity", i);
+
+  /* Draw the line itself. */
+  glBegin(GL_QUADS);
+  glVertex2f(u1+dv, v1-du);
+  glVertex2f(u1-dv, v1+du);
+  glVertex2f(u2-dv, v2+du);
+  glVertex2f(u2+dv, v2-du);
   glEnd();
 }
 
@@ -127,26 +184,29 @@ void blat1(float t, int tt) {
   for (i = -500; i < 500; i += 2) {
     float x = 512 + i*cos(t);
     float y = 512 + i*sin(t);
-    if ((tt % 200) < 100)
+    if ((tt % 300) < 100)
       spot (x, y, intensity);
-    else
+    else if ((tt % 300) < 200)
       spot ((int)(x + .5), (int)(y + .5), intensity);
+    else {
+      line (512 - 500*cos(t), 512 - 500*sin(t),
+	    512 + 499*cos(t), 512 + 499*sin(t), intensity);
+      break;
+    }
   }
 }
 
 void blat2(float t, int tt) {
-  int x, i;
+  int x;
 
   x = (5*tt) % 2048;
   if (x >= 1024)
     x = 2048-x;
 
-  for (i = 0; i < 1024; i++) {
-    spot (x+i, i, intensity);
-    spot (x-i, i, intensity);
-    spot (1023-x-i, 1024-i, intensity);
-    spot (1023-x+i, 1024-i, intensity);
-  }
+  line (0, x, x, 0, intensity);
+  line (x, 0, 1023, 1023-x, intensity);
+  line (1023, 1023-x, 1023-x, 1023, intensity);
+  line (1023-x, 1023, 0, x, intensity);
 }
 
 void blat3(float t, int tt)
@@ -162,8 +222,12 @@ void blat3(float t, int tt)
       v = (y)*cos(.005*tt) + (r*x)*sin(.005*tt);
       if ((tt % 400) < 200)
 	spot (512+u, 512+v, intensity);
-      else
-	spot ((int)(512+u+.5), (int)(512+v+.5), intensity);
+      else {
+	float u2 = (r*x)*cos(.005*tt) + (199)*sin(.005*tt);
+	float v2 = (199)*cos(.005*tt) + (r*x)*sin(.005*tt);
+	line (512+u, 512+v, 512+u2, 512+v2, intensity);
+	break;
+      }
     }
   }
 }
@@ -203,11 +267,19 @@ void blat5(float t, int tt)
 void (*blat[])(float, int) = { blat1, blat2, blat3, blat4, blat5 };
 
 int t2 = 0;
+float last_time = 0;
+int frames = 0;
 
 void draw(void) {
 	int tt;
 	float t = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
+	frames++;
 	t2++;
+	if (frames == 3*60) {
+	  fprintf (stderr, "FPS = %.1f\n", frames / (t - last_time));
+	  last_time = t;
+	  frames=0;
+	}
 
 	glViewport(0, 0, 1024, 1024);
 	gluOrtho2D(-1,1,-1,1);
@@ -234,7 +306,6 @@ void draw(void) {
 	/* Individual points. */
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, tex[1]);
-	glUseProgramObjectARB(prog_point);
 
 	blat[demo](t, t2);
 

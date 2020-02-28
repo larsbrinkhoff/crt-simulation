@@ -7,6 +7,40 @@
 #include <netdb.h>
 #include <poll.h>
 
+int
+dial(char *host, int port)
+{
+	char portstr[32];
+	int sockfd;
+	struct addrinfo *result, *rp, hints;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+
+	snprintf(portstr, 32, "%d", port);
+	if(getaddrinfo(host, portstr, &hints, &result)){
+		perror("error: getaddrinfo");
+		return -1;
+	}
+
+	for(rp = result; rp; rp = rp->ai_next){
+		sockfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+		if(sockfd < 0)
+			continue;
+		if(connect(sockfd, rp->ai_addr, rp->ai_addrlen) >= 0)
+			goto win;
+		close(sockfd);
+	}
+	freeaddrinfo(result);
+	perror("error");
+	return -1;
+
+win:
+	freeaddrinfo(result);
+	return sockfd;
+}
+
 int serve(int port)
 {
 	int sockfd, confd;
@@ -48,7 +82,8 @@ int transfer (int fd, void *buffer, int size)
   n = poll (&p, 1, 0);
   if (n > 0) {
     n = read (fd, buffer, size);
+    return n > 0 ? n : 0;
   }
 
-  return n;
+  return 0;
 }

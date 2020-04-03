@@ -7,16 +7,22 @@
 #include <netdb.h>
 #include <poll.h>
 
+static int sockfd;
+
+int acc(void)
+{
+	struct sockaddr_in client;
+	socklen_t len = sizeof client;
+	return accept(sockfd, (void *)&client, &len);
+}
+
 int serve(int port)
 {
-	int sockfd, confd;
-	socklen_t len;
-	struct sockaddr_in server, client;
+	struct sockaddr_in server;
 	int x;
 
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if(sockfd < 0){
-		perror("error: socket");
 		return -1;
 	}
 
@@ -28,26 +34,31 @@ int serve(int port)
 	server.sin_addr.s_addr = INADDR_ANY;
 	server.sin_port = htons(port);
 	if(bind(sockfd, (struct sockaddr*)&server, sizeof(server)) < 0){
-		perror("error: bind");
+		close(sockfd);
 		return -1;
 	}
 	listen(sockfd, 5);
-	len = sizeof(client);
-	confd = accept(sockfd, (struct sockaddr*)&client, &len);
-	return confd;
+	return acc();
 }
 
 int transfer (int fd, void *buffer, int size)
 {
   struct pollfd p;
-  int n;
+  int n = 0;
 
   p.fd = fd;
-  p.events = POLLIN;
+  p.events = POLLIN|POLLERR;
 
   n = poll (&p, 1, 0);
   if (n > 0) {
-    n = read (fd, buffer, size);
+    if (p.revents & POLLERR)
+      return -1;
+    if (p.revents & POLLHUP)
+      return -1;
+    if (p.revents & POLLIN)
+      n = read (fd, buffer, size);
+    if (n == 0)
+      return -1;
   }
 
   return n;

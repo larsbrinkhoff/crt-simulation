@@ -75,6 +75,9 @@ void set_uniform1f(unsigned int prog, const char *name, float val) {
 	int loc = glGetUniformLocationARB(prog, name);
 	if(loc != -1) {
 		glUniform1f(loc, val);
+	} else {
+	  printf("Location not found: %d %s\n", prog, name);
+	  exit(1);
 	}
 }
 
@@ -82,6 +85,17 @@ void set_uniform2f(unsigned int prog, const char *name, float val1, float val2) 
 	int loc = glGetUniformLocationARB(prog, name);
 	if(loc != -1) {
 	  glUniform2f(loc, val1, val2);
+	} else {
+	  printf("Location not found: %d %s\n", prog, name);
+	  exit(1);
+	}
+}
+
+void set_uniform3f(unsigned int prog, const char *name,
+		   float val1, float val2, float val3) {
+	int loc = glGetUniformLocationARB(prog, name);
+	if(loc != -1) {
+	  glUniform3f(loc, val1, val2, val3);
 	}
 }
 

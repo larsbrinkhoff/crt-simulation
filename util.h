@@ -9,6 +9,7 @@ void set_uniform1i(unsigned int prog, const char *name, int val);
 void set_uniform1fv(unsigned int prog, const char *name, int n, float *);
 void set_uniform3fv(unsigned int prog, const char *name, int n, float *);
 
+extern int dial(char *host, int port);
 extern int serve(int port);
 extern int transfer (int fd, void *buffer, int size);
 

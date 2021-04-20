@@ -23,7 +23,8 @@ GLuint tex[2];
 
 int fd;
 unsigned int buffer[1000];
-int points = 0;
+unsigned char *bufptr = (unsigned char *)buffer;
+unsigned int bufsiz = 0;
 
 GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
 
@@ -56,6 +57,15 @@ int main(int argc, char **argv) {
 	  fprintf (stderr, "Waiting for connection...");
 	  fd = serve(3400);
 	  fprintf (stderr, " OK\n");
+	  argc--;
+	  argv++;
+	}
+
+	if (argc >= 2 && strcmp (argv[1], "-V") == 0) {
+	  fprintf (stderr, "Waiting for connection...");
+	  fd = dial ("localhost", 12345);
+	  fprintf (stderr, " OK\n");
+	  demo = 5;
 	  argc--;
 	  argv++;
 	}
@@ -255,6 +265,7 @@ void blat4(float t, int tt)
 void blat5(float t, int tt)
 {
   int i;
+  int points = bufsiz / 4;
 
   for (i = 0; i < points; i++) {
     int x, y;
@@ -262,9 +273,62 @@ void blat5(float t, int tt)
     y = (buffer[i] >> 10) & 01777;
     spot (x, y, intensity * 0.1 * ((buffer[i] >> 20) & 7));
   }
+
+  bufsiz = 0;
+  bufptr = (unsigned char *)buffer;
 }
 
-void (*blat[])(float, int) = { blat1, blat2, blat3, blat4, blat5 };
+static int get8 (void)
+{
+  int x = *bufptr++;
+  bufsiz--;
+  return x;
+}
+
+static int get16 (void)
+{
+  int x1 = get8 ();
+  int x2 = get8 ();
+  return x1 << 8 | x2;
+}
+
+void blat6(float t, int tt)
+{
+  static int x, y;
+  int type, x1, y1;
+
+  while (bufsiz > 10) {
+    type = get8 ();
+    switch (type) {
+    case 2:
+      x = get16 ();
+      y = get16 ();
+      spot (x, 1023-y, intensity);
+      break;
+    case 3:
+      x1 = get16 ();
+      y1 = get16 ();
+      x = get16 ();
+      y = get16 ();
+      line (x1, 1023-y1, x, 1023-y, intensity);
+      break;
+    case 4:
+      x1 = x;
+      y1 = y;
+      x += (get8 () ^ 0x80) - 0x80;
+      y += (get8 () ^ 0x80) - 0x80;
+      line (x1, 1023-y1, x, 1023-y, intensity);
+      break;
+    }
+  }
+
+  if (bufsiz > 0) {
+    memmove (buffer, bufptr, bufsiz);
+    bufptr = (unsigned char *)buffer;
+  }
+}
+
+void (*blat[])(float, int) = { blat1, blat2, blat3, blat4, blat5, blat6 };
 
 int t2 = 0;
 float last_time = 0;
@@ -333,9 +397,11 @@ void draw(void) {
 	tex[0] = tex[1];
 	tex[1] = tt;
 
-	int n = transfer (fd, buffer, sizeof buffer);
-	if (n > 0) {
-	  points = n/4;
+	if (bufsiz < sizeof buffer - 300) {
+	  int n = transfer (fd, bufptr, sizeof buffer - bufsiz);
+	  if (n > 0) {
+	    bufsiz += n;
+	  }
 	}
 }
 
@@ -363,7 +429,7 @@ void key_handler(unsigned char key, int x, int y) {
 	  intensity /= 1.1;
 	  break;
 	case ' ':
-	  demo = (demo + 1) % 5;
+	  demo = (demo + 1) % 6;
 	  break;
 	}
 	glutPostRedisplay();

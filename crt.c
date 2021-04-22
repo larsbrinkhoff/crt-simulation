@@ -22,7 +22,7 @@ GLuint fbo;
 GLuint tex[2];
 
 int fd;
-unsigned int buffer[1000];
+unsigned int buffer[10000];
 unsigned char *bufptr = (unsigned char *)buffer;
 unsigned int bufsiz = 0;
 
@@ -318,6 +318,11 @@ void blat6(float t, int tt)
       x += (get8 () ^ 0x80) - 0x80;
       y += (get8 () ^ 0x80) - 0x80;
       line (x1, 1023-y1, x, 1023-y, intensity);
+      break;
+    case 5:
+      x += (get8 () ^ 0x80) - 0x80;
+      y += (get8 () ^ 0x80) - 0x80;
+      spot (x, 1023-y, intensity);
       break;
     }
   }
